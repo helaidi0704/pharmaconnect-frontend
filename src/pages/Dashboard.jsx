@@ -14,23 +14,38 @@ import {
   Pending as PendingIcon,
   CheckCircle as ResolvedIcon,
   Cancel as RejectedIcon,
+  LocalPharmacy,
+  Medication,
 } from '@mui/icons-material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { claimsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
+import { DashboardSkeleton } from '../components/LoadingSkeletons';
+import Breadcrumbs from '../components/Breadcrumbs';
+import QuickActions from '../components/QuickActions';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 const StatCard = ({ title, value, icon, color }) => (
-  <Card>
+  <Card
+    elevation={8}
+    sx={{
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%)',
+      backdropFilter: 'blur(10px)',
+      transition: 'transform 0.2s',
+      '&:hover': {
+        transform: 'translateY(-4px)',
+      }
+    }}
+  >
     <CardContent>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box>
-          <Typography color="text.secondary" gutterBottom variant="body2">
+          <Typography color="text.secondary" gutterBottom variant="body2" fontWeight="500">
             {title}
           </Typography>
-          <Typography variant="h4">{value}</Typography>
+          <Typography variant="h4" fontWeight="700">{value}</Typography>
         </Box>
         <Box
           sx={{
@@ -42,6 +57,7 @@ const StatCard = ({ title, value, icon, color }) => (
             alignItems: 'center',
             justifyContent: 'center',
             color: 'white',
+            boxShadow: 3,
           }}
         >
           {icon}
@@ -76,7 +92,7 @@ const Dashboard = () => {
       <>
         <Navbar />
         <Container sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-          <CircularProgress />
+          <DashboardSkeleton />
         </Container>
       </>
     );
@@ -102,13 +118,54 @@ const Dashboard = () => {
   return (
     <>
       <Navbar />
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Tableau de bord
-        </Typography>
-        <Typography variant="body1" color="text.secondary" gutterBottom sx={{ mb: 3 }}>
-          Bienvenue, {user?.firstName || user?.companyName || user?.email}
-        </Typography>
+      <Box
+        sx={{
+          minHeight: 'calc(100vh - 64px)',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          py: 4,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+              borderRadius: 3,
+              p: 3,
+              mb: 4,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Decorative pharmacy icons */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                right: '5%',
+                transform: 'translateY(-50%)',
+                opacity: 0.15,
+              }}
+            >
+              <LocalPharmacy sx={{ fontSize: 120 }} />
+            </Box>
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: '10%',
+                right: '15%',
+                opacity: 0.1,
+              }}
+            >
+              <Medication sx={{ fontSize: 60 }} />
+            </Box>
+
+            <Typography variant="h4" gutterBottom fontWeight="700" sx={{ position: 'relative', zIndex: 1 }}>
+              Tableau de bord
+            </Typography>
+            <Typography variant="body1" color="text.secondary" gutterBottom sx={{ position: 'relative', zIndex: 1 }}>
+              Bienvenue, {user?.firstName || user?.companyName || user?.email}
+            </Typography>
+          </Box>
 
         {/* Cartes de statistiques */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -216,7 +273,8 @@ const Dashboard = () => {
             </Paper>
           </Grid>
         </Grid>
-      </Container>
+        </Container>
+      </Box>
     </>
   );
 };

@@ -26,12 +26,16 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { Brightness4, Brightness7 } from '@mui/icons-material';
+import BusinessIcon from '@mui/icons-material/Business'; 
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
 
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
@@ -49,19 +53,24 @@ const Navbar = () => {
   const menuItems = [
     { text: 'Tableau de bord', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Réclamations', icon: <ReceiptLongIcon />, path: '/claims' },
+    ...(user?.role === 'depot_manager'
+      ? [{ text: 'Mes Pharmacies', icon: <BusinessIcon />, path: '/partners' }]
+      : []),
+    ...(user?.role === 'pharmacy'
+      ? [{ text: 'Stock', icon: <InventoryIcon />, path: '/stock' }]
+      : []),
   ];
 
-  // Ajouter "Stock" seulement pour les pharmacies
-  if (user?.role === 'pharmacy') {
-    menuItems.push({ text: 'Stock', icon: <InventoryIcon />, path: '/stock' });
-  }
-
+  
   const toggleDrawer = (open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
     }
     setDrawerOpen(open);
   };
+
+  
+
 
   const drawer = (
     <Box
@@ -85,7 +94,13 @@ const Navbar = () => {
 
   return (
     <>
-      <AppBar position="static">
+      <AppBar
+        position="static"
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          boxShadow: '0 4px 20px 0 rgba(0,0,0,0.1)',
+        }}
+      >
         <Container maxWidth="xl">
           <Toolbar disableGutters>
             {/* Logo et titre */}
@@ -146,6 +161,12 @@ const Navbar = () => {
                 </Button>
               ))}
             </Box>
+
+               <Tooltip title={darkMode ? 'Mode clair' : 'Mode sombre'}>
+               <IconButton onClick={toggleDarkMode} color="inherit" sx={{ mr: 1 }}>
+                 {darkMode ? <Brightness7 /> : <Brightness4 />}
+               </IconButton>
+              </Tooltip>
 
             {/* User menu */}
             <Box sx={{ flexGrow: 0 }}>

@@ -10,8 +10,9 @@ import {
   Alert,
   InputAdornment,
   IconButton,
+  Avatar,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, LocalPharmacy, Medication, HealthAndSafety, Vaccines } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -51,22 +52,96 @@ const Login = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Decorative floating pharmacy icons */}
       <Box
         sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          position: 'absolute',
+          top: '10%',
+          left: '10%',
+          opacity: 0.1,
+          animation: 'float 6s ease-in-out infinite',
+          '@keyframes float': {
+            '0%, 100%': { transform: 'translateY(0px)' },
+            '50%': { transform: 'translateY(-20px)' },
+          },
         }}
       >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
-            PharmaConnect
-          </Typography>
-          <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
-            Gestion des réclamations pharmaceutiques
-          </Typography>
+        <Medication sx={{ fontSize: 100 }} />
+      </Box>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '60%',
+          right: '15%',
+          opacity: 0.1,
+          animation: 'float 8s ease-in-out infinite',
+          animationDelay: '1s',
+        }}
+      >
+        <HealthAndSafety sx={{ fontSize: 120 }} />
+      </Box>
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: '15%',
+          left: '15%',
+          opacity: 0.1,
+          animation: 'float 7s ease-in-out infinite',
+          animationDelay: '2s',
+        }}
+      >
+        <Vaccines sx={{ fontSize: 90 }} />
+      </Box>
+
+      <Container component="main" maxWidth="xs">
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <Paper
+            elevation={24}
+            sx={{
+              p: 4,
+              width: '100%',
+              borderRadius: 3,
+              backdropFilter: 'blur(10px)',
+              background: 'rgba(255, 255, 255, 0.95)',
+            }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+              <Avatar
+                sx={{
+                  width: 80,
+                  height: 80,
+                  bgcolor: 'primary.main',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  mb: 2,
+                }}
+              >
+                <LocalPharmacy sx={{ fontSize: 50 }} />
+              </Avatar>
+              <Typography component="h1" variant="h4" align="center" fontWeight="700" gutterBottom>
+                PharmaConnect
+              </Typography>
+              <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 1 }}>
+                Gestion des réclamations pharmaceutiques
+              </Typography>
+            </Box>
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -135,6 +210,7 @@ const Login = () => {
         </Paper>
       </Box>
     </Container>
+    </Box>
   );
 };
 

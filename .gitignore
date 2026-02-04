@@ -27,3 +27,9 @@ Thumbs.db
 
 # Vite
 .vite
+
+# Cloud Build
+.gcloudignore
+
+# Logs
+logs.txt

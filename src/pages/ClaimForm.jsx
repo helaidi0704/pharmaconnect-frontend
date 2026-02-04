@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import {
   Container,
   Paper,
@@ -8,15 +8,21 @@ import {
   Grid,
   MenuItem,
   Box,
+ // Breadcrumbs
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useParams } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import { claimsAPI } from '../services/api';
+import { claimsAPI, partnersAPI } from '../services/api';
 import Navbar from '../components/Navbar';
+import { FormSkeleton } from '../components/LoadingSkeletons';
+import Breadcrumbs from '../components/Breadcrumbs';
 
 const ClaimForm = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const isEditMode = Boolean(id); 
+
   const [formData, setFormData] = useState({
     productId: '507f1f77bcf86cd799439011', // ID temporaire pour demo
     claimType: '',
@@ -25,8 +31,57 @@ const ClaimForm = () => {
     batchNumber: '',
     quantity: '',
     expiryDate: '',
+    depotId: '',
   });
   const [loading, setLoading] = useState(false);
+
+const [depots, setDepots] = useState([]);
+const [laboratories, setLaboratories] = useState([]);
+
+  useEffect(() => {
+    fetchPartners(); // Load depot partners on mount
+    if (isEditMode) {
+      fetchClaimData();
+    }
+  }, [id]);
+
+  const fetchPartners = async () => {
+  try {
+    // Charger MES partenaires (dépôts)
+    const response = await partnersAPI.getMyPartners();
+    setDepots(response.data.data);
+  } catch (error) {
+    console.error('Error fetching partners:', error);
+  }
+};
+   // ← AJOUTER CETTE FONCTION
+  const fetchClaimData = async () => {
+    setLoading(true);
+    try {
+      const response = await claimsAPI.getById(id);
+      const claim = response.data.data;
+      
+      // Pré-remplir le formulaire
+      setFormData({
+        productId: claim.productId?._id || '',
+        claimType: claim.claimType || '',
+        priority: claim.priority || '',
+        batchNumber: claim.batchNumber || '',
+        quantity: claim.quantity || '',
+        expiryDate: claim.expiryDate ? claim.expiryDate.split('T')[0] : '',
+        description: claim.description || '',
+        depotId: claim.depotId?._id || '',
+        laboratoryId: claim.laboratoryId?._id || '',
+      });
+    } catch (error) {
+      console.error('Error fetching claim:', error);
+      enqueueSnackbar('Erreur lors du chargement de la réclamation', { variant: 'error' });
+      navigate('/claims');
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const handleChange = (e) => {
     setFormData({
@@ -36,44 +91,38 @@ const ClaimForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      // Préparer les données
-      const submitData = {
-        ...formData,
-        quantity: formData.quantity ? parseInt(formData.quantity) : undefined,
-      };
-
-      // Supprimer les champs vides
-      Object.keys(submitData).forEach(key => {
-        if (submitData[key] === '' || submitData[key] === undefined) {
-          delete submitData[key];
-        }
-      });
-
-      await claimsAPI.create(submitData);
+  try {
+    if (isEditMode) {
+      // Mode édition - UPDATE
+      await claimsAPI.update(id, formData);
+      enqueueSnackbar('Réclamation modifiée avec succès', { variant: 'success' });
+    } else {
+      // Mode création - CREATE
+      await claimsAPI.create(formData);
       enqueueSnackbar('Réclamation créée avec succès', { variant: 'success' });
-      navigate('/claims');
-    } catch (error) {
-      console.error('Error creating claim:', error);
-      enqueueSnackbar(
-        error.response?.data?.error?.message || 'Erreur lors de la création',
-        { variant: 'error' }
-      );
-    } finally {
-      setLoading(false);
     }
-  };
+    navigate('/claims');
+  } catch (error) {
+    console.error('Error saving claim:', error);
+    enqueueSnackbar(
+      error.response?.data?.error?.message || 'Erreur lors de l\'enregistrement',
+      { variant: 'error' }
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>
       <Navbar />
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         <Paper sx={{ p: 4 }}>
-          <Typography variant="h4" gutterBottom>
-            Nouvelle réclamation
+          <Typography variant="h4">
+            {isEditMode ? 'Modifier la réclamation' : 'Nouvelle réclamation'}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Créez une nouvelle réclamation pour signaler un problème
@@ -111,6 +160,25 @@ const ClaimForm = () => {
                   <MenuItem value="medium">Moyenne</MenuItem>
                   <MenuItem value="high">Haute</MenuItem>
                   <MenuItem value="urgent">Urgente</MenuItem>
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  select
+                  fullWidth
+                  name="depotId"
+                  label="Assigner à un dépôt (Optionnel)"
+                  value={formData.depotId}
+                  onChange={handleChange}
+                  helperText={depots.length === 0 ? "Aucun partenaire dépôt disponible. Ajoutez des partenaires d'abord." : "Sélectionnez un dépôt pour traiter cette réclamation"}
+                >
+                  <MenuItem value="">-- Aucun dépôt --</MenuItem>
+                  {depots.map((depot) => (
+                    <MenuItem key={depot._id} value={depot._id}>
+                      {depot.companyName}
+                    </MenuItem>
+                  ))}
                 </TextField>
               </Grid>
 
@@ -176,7 +244,10 @@ const ClaimForm = () => {
                 variant="contained"
                 disabled={loading}
               >
-                {loading ? 'Création...' : 'Créer la réclamation'}
+                {loading
+                  ? (isEditMode ? 'Modification...' : 'Création...')
+                  : (isEditMode ? 'Modifier la réclamation' : 'Créer la réclamation')
+                }
               </Button>
             </Box>
           </Box>
