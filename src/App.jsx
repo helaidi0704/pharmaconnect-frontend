@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';  // ← AJOUTER
 import Profile from './pages/Profile';
 import { ThemeProvider } from './contexts/ThemeContext'; // Votre contexte
+import AIChatbot from './components/AIChatbot';
 
 
 // Pages
@@ -195,6 +196,7 @@ function App() {
           <AuthProvider>
              <SocketProvider>
                 <AppRoutes />
+                <AIChatbot />
             </SocketProvider>
           </AuthProvider>
         </BrowserRouter>

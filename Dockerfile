@@ -11,13 +11,11 @@ COPY package*.json ./
 RUN npm install
 
 # Copy source code
-COPY . .
-
-# Fix permissions on node_modules binaries
-RUN chmod -R +x node_modules/.bin
+COPY src ./src
+COPY index.html vite.config.js ./
 
 # Build the app (Vite)
- RUN npm run build
+RUN npm run build
 #RUN npx vite build
 
 # Production stage - Nginx

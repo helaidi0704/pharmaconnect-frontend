@@ -64,10 +64,18 @@ const Register = () => {
       return;
     }
 
-    // Préparer les données (sans confirmPassword)
+    // Préparer les données (sans confirmPassword et filtrer les champs vides)
     const { confirmPassword, ...registerData } = formData;
 
-    const result = await register(registerData);
+    // Filter out empty strings and keep only fields with values
+    const cleanedData = Object.entries(registerData).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+
+    const result = await register(cleanedData);
 
     if (result.success) {
       navigate('/dashboard');

@@ -3,7 +3,7 @@ import axios from 'axios';
 // Configuration de base axios
 const api = axios.create({
   //baseURL: 'http://localhost:8082/api',
-    baseURL: 'https://pharmaconnect-backend-5mbdpobdya-ew.a.run.app',
+    baseURL: 'https://pharmaconnect-backend-179404211924.europe-west1.run.app',
   
   headers: {
     'Content-Type': 'application/json',
@@ -119,6 +119,11 @@ export const filesAPI = {
 export const messagesAPI = {
   getByClaimId: (claimId) => api.get(`/api/messages/claim/${claimId}`),
   send: (data) => api.post('/api/messages', data),
+};
+
+// Chatbot API
+export const chatbotAPI = {
+  sendMessage: (data) => api.post('/api/chatbot/message', data),
 };
 
 export default api;

@@ -95,13 +95,21 @@ const [laboratories, setLaboratories] = useState([]);
   setLoading(true);
 
   try {
+    // Filter out empty strings and null values
+    const cleanedData = Object.entries(formData).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+
     if (isEditMode) {
       // Mode édition - UPDATE
-      await claimsAPI.update(id, formData);
+      await claimsAPI.update(id, cleanedData);
       enqueueSnackbar('Réclamation modifiée avec succès', { variant: 'success' });
     } else {
       // Mode création - CREATE
-      await claimsAPI.create(formData);
+      await claimsAPI.create(cleanedData);
       enqueueSnackbar('Réclamation créée avec succès', { variant: 'success' });
     }
     navigate('/claims');

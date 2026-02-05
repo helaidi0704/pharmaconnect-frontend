@@ -249,6 +249,7 @@ const ClaimsList = () => {
                     <TableCell>Statut</TableCell>
                     <TableCell>Priorité</TableCell>
                     {user?.role !== 'pharmacy' && <TableCell>Pharmacie</TableCell>}
+                    <TableCell>Dépôt assigné</TableCell>
                     <TableCell>Date</TableCell>
                     <TableCell align="right">Actions</TableCell>
                   </TableRow>
@@ -267,6 +268,20 @@ const ClaimsList = () => {
                       {user?.role !== 'pharmacy' && (
                         <TableCell>{claim.pharmacyId?.companyName || 'N/A'}</TableCell>
                       )}
+                      <TableCell>
+                        {claim.depotId?.companyName ? (
+                          <Chip
+                            label={claim.depotId.companyName}
+                            size="small"
+                            variant="outlined"
+                            color="info"
+                          />
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            Non assigné
+                          </Typography>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {format(new Date(claim.createdAt), 'dd MMM yyyy', { locale: fr })}
                       </TableCell>

@@ -41,6 +41,10 @@ const Profile = () => {
     companyName: '',
     phone: '',
     companyAddress: '',
+    street: '',
+    city: '',
+    postalCode: '',
+    country: '',
     latitude: '',
     longitude: '',
   });
@@ -61,6 +65,10 @@ const Profile = () => {
         companyName: user.companyName || '',
         phone: user.phone || '',
         companyAddress: user.companyAddress || '',
+        street: user.street || '',
+        city: user.city || '',
+        postalCode: user.postalCode || '',
+        country: user.country || 'France',
         latitude: user.location?.coordinates?.[1] || '',
         longitude: user.location?.coordinates?.[0] || '',
       });
@@ -92,18 +100,9 @@ const Profile = () => {
     try {
       const { email, latitude, longitude, ...updates } = profileData; // Email non modifiable
 
-      // Ajouter les coordonnées si fournies
-      if (latitude && longitude) {
-        updates.location = {
-          type: 'Point',
-          coordinates: [parseFloat(longitude), parseFloat(latitude)],
-          address: updates.companyAddress || '',
-        };
-      }
-
       const response = await authAPI.updateProfile(updates);
       updateUser(response.data.data);
-      enqueueSnackbar('Profil mis à jour avec succès', { variant: 'success' });
+      enqueueSnackbar('Profil mis à jour avec succès. La localisation sera mise à jour automatiquement.', { variant: 'success' });
     } catch (error) {
       console.error('Error updating profile:', error);
       enqueueSnackbar(
@@ -278,47 +277,61 @@ const Profile = () => {
                 </Grid>
 
                 <Grid item xs={12}>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Renseignez votre adresse pour apparaître automatiquement sur la carte des partenaires
+                  </Alert>
+                </Grid>
+
+                <Grid item xs={12}>
                   <TextField
                     fullWidth
-                    label="Adresse complète"
+                    label="Rue"
+                    name="street"
+                    value={profileData.street}
+                    onChange={handleProfileChange}
+                    helperText="Numéro et nom de rue"
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Code postal"
+                    name="postalCode"
+                    value={profileData.postalCode}
+                    onChange={handleProfileChange}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Ville"
+                    name="city"
+                    value={profileData.city}
+                    onChange={handleProfileChange}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Pays"
+                    name="country"
+                    value={profileData.country}
+                    onChange={handleProfileChange}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Adresse complète (optionnel)"
                     name="companyAddress"
                     value={profileData.companyAddress}
                     onChange={handleProfileChange}
                     helperText="Adresse complète de votre établissement"
                   />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Latitude"
-                    name="latitude"
-                    type="number"
-                    inputProps={{ step: 'any' }}
-                    value={profileData.latitude}
-                    onChange={handleProfileChange}
-                    helperText="Ex: 48.8566 (Paris)"
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Longitude"
-                    name="longitude"
-                    type="number"
-                    inputProps={{ step: 'any' }}
-                    value={profileData.longitude}
-                    onChange={handleProfileChange}
-                    helperText="Ex: 2.3522 (Paris)"
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Alert severity="info">
-                    Pour trouver vos coordonnées: Ouvrez Google Maps, faites un clic droit sur votre
-                    emplacement, et copiez les coordonnées (latitude, longitude).
-                  </Alert>
                 </Grid>
               </Grid>
 

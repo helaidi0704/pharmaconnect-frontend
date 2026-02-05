@@ -57,7 +57,10 @@ const Navbar = () => {
       ? [{ text: 'Mes Pharmacies', icon: <BusinessIcon />, path: '/partners' }]
       : []),
     ...(user?.role === 'pharmacy'
-      ? [{ text: 'Stock', icon: <InventoryIcon />, path: '/stock' }]
+      ? [
+          { text: 'Stock', icon: <InventoryIcon />, path: '/stock' },
+          { text: 'Mes Dépôts', icon: <BusinessIcon />, path: '/partners' }
+        ]
       : []),
   ];
 

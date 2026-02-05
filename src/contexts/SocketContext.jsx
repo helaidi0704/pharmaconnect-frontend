@@ -23,7 +23,7 @@ export const SocketProvider = ({ children }) => {
     // Créer la connexion Socket.io
     const token = localStorage.getItem('accessToken');
 
-    const SOCKET_URL = import.meta.env.VITE_API_URL || 'https://pharmaconnect-backend-5mbdpobdya-ew.a.run.app';
+    const SOCKET_URL = import.meta.env.VITE_API_URL || 'https://pharmaconnect-backend-179404211924.europe-west1.run.app';
 
     const newSocket = io(SOCKET_URL, {
       auth: {
