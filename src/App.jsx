@@ -22,7 +22,8 @@ import StockList from './pages/StockList';
 import StockForm from './pages/StockForm';
 import StockAlerts from './pages/StockAlerts';
 import theme from './theme'
-import Partners from './pages/Partners'; 
+import Partners from './pages/Partners';
+import PartnerDetail from './pages/PartnerDetail'; 
 
 
 
@@ -104,6 +105,15 @@ function AppRoutes() {
     </ProtectedRoute>
     }
     />
+
+      <Route
+        path="/partners/:id"
+        element={
+          <ProtectedRoute>
+            <PartnerDetail />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
           path="/claims/:id/edit"  // ← AJOUTER CETTE ROUTE

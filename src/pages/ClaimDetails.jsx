@@ -17,15 +17,17 @@ import {
   Divider,
   //ConfirmDialog,
   //Breadcrumbs ,
+  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
   MenuItem,
   Alert,
-  List,
-  ListItem,
-  ListItemText,
+  Select,
+  FormControl,
+  InputLabel,
+  FormHelperText,
 } from '@mui/material';
 
 
@@ -43,16 +45,15 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { claimsAPI } from '../services/api';
+import { claimsAPI, messagesAPI, filesAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useSnackbar } from 'notistack';
 import Navbar from '../components/Navbar';
 import FileUpload from '../components/FileUpload';
 import { DetailsSkeleton } from '../components/LoadingSkeletons';
 import StatusChip from '../components/StatusChip';
-import ConfirmDialog from '../components/ConfirmDialog';
 import Breadcrumbs from '../components/Breadcrumbs';
-//import StatusChip from '../components/StatusChip'; 
+import ClaimTimeline from '../components/ClaimTimeline'; 
 
 const ClaimDetails = () => {
   const { id } = useParams();
@@ -61,6 +62,8 @@ const ClaimDetails = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [claim, setClaim] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [messages, setMessages] = useState([]);
+  const [files, setFiles] = useState([]);
   const [statusDialog, setStatusDialog] = useState({
     open: false,
     newStatus: '',
@@ -70,6 +73,8 @@ const ClaimDetails = () => {
 
   useEffect(() => {
     fetchClaimDetails();
+    fetchMessages();
+    fetchFiles();
   }, [id]);
 
   const fetchClaimDetails = async () => {
@@ -83,6 +88,24 @@ const ClaimDetails = () => {
       navigate('/claims');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const response = await messagesAPI.getByClaimId(id);
+      setMessages(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const fetchFiles = async () => {
+    try {
+      const response = await filesAPI.getByClaimId(id);
+      setFiles(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching files:', error);
     }
   };
 
@@ -130,9 +153,33 @@ const ClaimDetails = () => {
     return labels[type] || type;
   };
 
+  const getStatusLabel = (status) => {
+    const labels = {
+      created: 'Créée',
+      in_progress: 'En cours',
+      pending: 'En attente',
+      resolved: 'Résolue',
+      rejected: 'Rejetée',
+      closed: 'Clôturée',
+    };
+    return labels[status] || status;
+  };
+
+  const getStatusDescription = (status) => {
+    const descriptions = {
+      created: 'Réclamation nouvellement créée',
+      in_progress: 'Réclamation en cours de traitement',
+      pending: 'En attente d\'informations complémentaires',
+      resolved: 'Réclamation résolue avec succès',
+      rejected: 'Réclamation rejetée',
+      closed: 'Réclamation clôturée définitivement',
+    };
+    return descriptions[status] || '';
+  };
+
   const getAvailableStatuses = () => {
     if (!claim) return [];
-    
+
     const transitions = {
       created: ['in_progress', 'rejected'],
       in_progress: ['pending', 'resolved', 'rejected'],
@@ -271,45 +318,10 @@ const ClaimDetails = () => {
               </Grid>
             </Paper>
 
-            {/* History */}
-            {claim.statusHistory && claim.statusHistory.length > 0 && (
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Historique
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-
-                <List>
-                  {claim.statusHistory.map((history, index) => (
-                    <ListItem
-                      key={index}
-                      sx={{
-                        flexDirection: 'column',
-                        alignItems: 'flex-start',
-                        borderLeft: '3px solid',
-                        borderColor: 'primary.main',
-                        pl: 2,
-                        mb: 2,
-                      }}
-                    >
-                      <Box display="flex" justifyContent="space-between" width="100%" mb={1}>
-                        <StatusChip status={claim.status} />
-                        <Typography variant="caption" color="text.secondary">
-                          {format(new Date(history.changedAt), 'dd MMM yyyy HH:mm', {
-                            locale: fr,
-                          })}
-                        </Typography>
-                      </Box>
-                      {history.notes && (
-                        <Typography variant="body2" color="text.secondary">
-                          {history.notes}
-                        </Typography>
-                      )}
-                    </ListItem>
-                  ))}
-                </List>
-              </Paper>
-            )}
+            {/* Timeline */}
+            <Box sx={{ mt: 3 }}>
+              <ClaimTimeline claim={claim} messages={messages} files={files} />
+            </Box>
 
             {/* Chat */}  {/* ← AJOUTER CETTE SECTION */}
                 <Paper sx={{ p: 3, mt: 3 }}>
@@ -362,7 +374,19 @@ const ClaimDetails = () => {
                   </Box>
                   <Divider sx={{ mb: 2 }} />
 
-                  <Typography variant="body1" fontWeight="medium" gutterBottom>
+                  <Typography
+                    variant="body1"
+                    fontWeight="medium"
+                    gutterBottom
+                    sx={{
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      }
+                    }}
+                    onClick={() => navigate(`/partners/${claim.depotId._id}`)}
+                  >
                     {claim.depotId.companyName}
                   </Typography>
 
@@ -438,14 +462,66 @@ const ClaimDetails = () => {
       </Container>
 
       {/* Status Change Dialog */}
- <ConfirmDialog
-  open={statusDialog.open}
-  onClose={() => setStatusDialog({ open: false, status: '', notes: '' })}
-  onConfirm={handleStatusChange}
-  title="Changer le statut"
-  message={`Confirmer le changement de statut vers "${statusDialog.status}" ?`}
-  confirmText="Confirmer"
-/>
+      <Dialog
+        open={statusDialog.open}
+        onClose={() => setStatusDialog({ open: false, newStatus: '', notes: '' })}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Changer le statut de la réclamation</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>Nouveau statut</InputLabel>
+              <Select
+                value={statusDialog.newStatus}
+                onChange={(e) => setStatusDialog({ ...statusDialog, newStatus: e.target.value })}
+                label="Nouveau statut"
+              >
+                {getAvailableStatuses().map((status) => (
+                  <MenuItem key={status} value={status}>
+                    <Box>
+                      <Typography variant="body1" fontWeight="medium">
+                        {getStatusLabel(status)}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {getStatusDescription(status)}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>
+                Statut actuel: <strong>{getStatusLabel(claim?.status)}</strong>
+              </FormHelperText>
+            </FormControl>
+
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Notes (optionnel)"
+              value={statusDialog.notes}
+              onChange={(e) => setStatusDialog({ ...statusDialog, notes: e.target.value })}
+              placeholder="Ajoutez des notes sur ce changement de statut..."
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setStatusDialog({ open: false, newStatus: '', notes: '' })}
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleStatusChange}
+            disabled={!statusDialog.newStatus || updating}
+          >
+            {updating ? 'Mise à jour...' : 'Confirmer'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

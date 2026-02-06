@@ -101,6 +101,7 @@ export const productsAPI = {
 export const partnersAPI = {
   getMyPartners: () => api.get('/api/partners'),
   getAvailable: () => api.get('/api/partners/available'),
+  getById: (partnerId) => api.get(`/api/partners/${partnerId}`),
   add: (partnerId) => api.post(`/api/partners/${partnerId}`),
   remove: (partnerId) => api.delete(`/api/partners/${partnerId}`),
 };
